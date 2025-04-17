@@ -1,0 +1,31 @@
+steps:
+  # Install Node.js
+  - name: 'gcr.io/cloud-builders/npm'
+    args: ['install']
+  
+  # Run tests (optional)
+  - name: 'gcr.io/cloud-builders/npm'
+    args: ['test', '--', '--watchAll=false']
+  
+  # Build the React app
+  - name: 'gcr.io/cloud-builders/npm'
+    args: ['run', 'build']
+  
+  # Build Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/my-react-app:$COMMIT_SHA', '.']
+  
+  # Push to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/my-react-app:$COMMIT_SHA']
+  
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    args: ['gcloud', 'run', 'deploy', 'my-react-app',
+           '--image', 'gcr.io/$PROJECT_ID/my-react-app:$COMMIT_SHA',
+           '--platform', 'managed',
+           '--region', 'us-central1',
+           '--allow-unauthenticated',
+           '--set-env-vars', 'NODE_ENV=production']
+images:
+  - 'gcr.io/$PROJECT_ID/my-react-app:$COMMIT_SHA'
